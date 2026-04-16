@@ -1,16 +1,13 @@
 using UnityEngine;
 
-public class Test : MonoBehaviour
+public class MoveObject : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    // 移動スピード
+    public float speed = 5.0f;
 
-    // Update is called once per frame
     void Update()
     {
-        
+        // 右方向（Vector3.right = 1,0,0）に、スピードと時間をかけて移動
+        transform.Translate(Vector3.right * speed * Time.deltaTime);
     }
 }
