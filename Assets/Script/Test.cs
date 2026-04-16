@@ -11,3 +11,5 @@ public class MoveObject : MonoBehaviour
         transform.Translate(Vector3.right * speed * Time.deltaTime);
     }
 }
+
+//Šm”F—p
