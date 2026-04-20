@@ -2,18 +2,18 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [Header("ˆÚ“®Ý’è")]
-    public float moveSpeed = 6f;        // Å‚‘¬“x
-    public float acceleration = 40f;    // ‰Á‘¬—Í
-    public float deceleration = 40f;    // Œ¸‘¬—Í
+    [Header("ï¿½Ú“ï¿½ï¿½Ý’ï¿½")]
+    public float moveSpeed = 6f;        // ï¿½Åï¿½ï¿½ï¿½ï¿½x
+    public float acceleration = 40f;    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    public float deceleration = 40f;    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-    [Header("ƒWƒƒƒ“ƒvÝ’è")]
-    public float jumpForce = 12f;       // ƒWƒƒƒ“ƒv—Í
+    [Header("ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½vï¿½Ý’ï¿½")]
+    public float jumpForce = 12f;       // ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½vï¿½ï¿½
 
-    [Header("Ú’n”»’è")]
-    public Transform groundCheck;       // ‘«Œ³‚Ì‹óƒIƒuƒWƒFƒNƒg
+    [Header("ï¿½Ú’nï¿½ï¿½ï¿½ï¿½")]
+    public Transform groundCheck;       // ï¿½ï¿½ï¿½ï¿½ï¿½Ì‹ï¿½Iï¿½uï¿½Wï¿½Fï¿½Nï¿½g
     public float groundCheckRadius = 0.1f;
-    public LayerMask groundLayer;       // ’n–Ê‚ÌƒŒƒCƒ„[
+    public LayerMask groundLayer;       // ï¿½nï¿½Ê‚Ìƒï¿½ï¿½Cï¿½ï¿½ï¿½[
 
     private Rigidbody2D rb;
     private bool isGrounded;
@@ -25,7 +25,7 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        // Ú’n”»’è
+        // ï¿½Ú’nï¿½ï¿½ï¿½ï¿½
         isGrounded = Physics2D.OverlapCircle(
             groundCheck.position,
             groundCheckRadius,
@@ -40,9 +40,9 @@ public class PlayerController : MonoBehaviour
         HandleMove();
     }
 
-    // „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-    // ¶‰EˆÚ“®i‰Á‘¬EŒ¸‘¬‚ ‚èj
-    // „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    // ï¿½ï¿½ï¿½Eï¿½Ú“ï¿½ï¿½iï¿½ï¿½ï¿½ï¿½ï¿½Eï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½j
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     void HandleMove()
     {
         float input = 0f;
@@ -52,18 +52,19 @@ public class PlayerController : MonoBehaviour
         float targetSpeed = input * moveSpeed;
         float speedDiff = targetSpeed - rb.linearVelocity.x;
 
-        // “ü—Í‚ª‚ ‚ê‚Î‰Á‘¬A‚È‚¯‚ê‚ÎŒ¸‘¬
+        // ï¿½ï¿½ï¿½Í‚ï¿½ï¿½ï¿½ï¿½ï¿½Î‰ï¿½ï¿½ï¿½ï¿½Aï¿½È‚ï¿½ï¿½ï¿½ÎŒï¿½ï¿½ï¿½
         float force = (Mathf.Abs(input) > 0.01f) ? acceleration : deceleration;
 
-        // velocity‚É’¼Ú‰ÁŽZ‚µ‚ÄŠŠ‚ç‚©‚É•Ï‰»‚³‚¹‚é
+        // velocityï¿½É’ï¿½ï¿½Ú‰ï¿½ï¿½Zï¿½ï¿½ï¿½ÄŠï¿½ï¿½ç‚©ï¿½É•Ï‰ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         rb.AddForce(Vector2.right * speedDiff * force, ForceMode2D.Force);
     }
 
-    // „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
-    // ƒWƒƒƒ“ƒv
-    // „Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ„Ÿ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    // ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½v
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     void HandleJump()
     {
+        if (GameManager.Instance != null && !GameManager.Instance.IsPlaying) return;
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
