@@ -25,6 +25,9 @@ public class TimeManager : MonoBehaviour
 
     // 砂切れかどうか（外部から参照）
     public bool IsSandEmpty { get; private set; } = false;
+    // 砂が満タンかどうか（外部から参照）
+    public bool IsSandFull => CurrentSand >= MaxSand && !IsReversing;
+
 
     // 盤面の時間スケール（外部から参照）
     public float BoardTimeScale { get; private set; } = 1f;
@@ -62,6 +65,30 @@ public class TimeManager : MonoBehaviour
     // ─────────────────────────────
     void HandleInput()
     {
+        // 満タン中は逆行方向への入力を無効化
+        if (IsSandFull)
+        {
+            if (Input.GetKey(KeyCode.RightArrow))
+                targetAngle -= AngleChangeSpeed * Time.deltaTime;
+
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                upKeyTimer += Time.deltaTime;
+                if (upKeyTimer >= LongPressTime)
+                {
+                    targetAngle = 0f;
+                    HourglassAngle = 0f;
+                }
+            }
+            else
+            {
+                upKeyTimer = 0f;
+            }
+
+            targetAngle = Mathf.Clamp(targetAngle, 0f, 90f);
+            return;
+        }
+
         // 砂切れ中は順行方向への入力を無効化
         if (IsSandEmpty)
         {
@@ -73,6 +100,7 @@ public class TimeManager : MonoBehaviour
                 downKeyTimer += Time.deltaTime;
                 if (downKeyTimer >= LongPressTime)
                     targetAngle = 180f;
+                    HourglassAngle = 180f;
             }
             else
             {
@@ -177,17 +205,22 @@ public class TimeManager : MonoBehaviour
     // ─────────────────────────────
     void UpdateSand()
     {
+        float sandDelta = Mathf.Abs(BoardTimeScale) * Time.deltaTime;
+
         if (IsReversing)
         {
-            // 逆行中は砂が回復する
-            CurrentSand += Time.deltaTime;
-            CurrentSand = Mathf.Min(CurrentSand, MaxSand);
             IsSandEmpty = false;
+            CurrentSand += sandDelta;
+            CurrentSand = Mathf.Min(CurrentSand, MaxSand);
+
+            if (CurrentSand >= MaxSand)
+            {
+                ForceMovToForward(); // IsSandFullの記述を削除
+            }
         }
         else
         {
-            // 順行・停止中は砂が減る
-            CurrentSand -= Time.deltaTime;
+            CurrentSand -= sandDelta;
             CurrentSand = Mathf.Max(CurrentSand, 0f);
 
             if (CurrentSand <= 0f)
@@ -198,10 +231,17 @@ public class TimeManager : MonoBehaviour
         }
     }
 
-    // 砂切れ時：目標角度を強制的に逆行側へ
+    // 砂切れ時：90度（停止）へ即座に
     void ForceMoveToReverse()
     {
-        if (targetAngle >= 90f) return;
-        targetAngle = Mathf.Max(targetAngle, 90f);
+        targetAngle = 90f;
+        HourglassAngle = 90f;
+    }
+
+    // 満タン時：90度（停止）へ即座に
+    void ForceMovToForward()
+    {
+        targetAngle = 90f;
+        HourglassAngle = 90f;
     }
 }

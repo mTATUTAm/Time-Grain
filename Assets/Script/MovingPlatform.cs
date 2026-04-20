@@ -1,4 +1,3 @@
-// MovingPlatform.cs
 using UnityEngine;
 
 public class MovingPlatform : MonoBehaviour
@@ -8,9 +7,37 @@ public class MovingPlatform : MonoBehaviour
 
     void Update()
     {
-        // BoardDeltaTime
-        // 逆行中は自動的にマイナスになるので逆方向に動く
         float dt = TimeManager.Instance.BoardDeltaTime;
         transform.Translate(moveDirection * speed * dt);
+    }
+
+    // ─────────────────────────────
+    // プレイヤーが乗ったら子オブジェクトにする
+    // ─────────────────────────────
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            // 上から乗ったときだけ追従（横や下からの接触は無視）
+            foreach (ContactPoint2D contact in collision.contacts)
+            {
+                if (contact.normal.y < -0.5f)
+                {
+                    collision.transform.SetParent(transform);
+                    break;
+                }
+            }
+        }
+    }
+
+    // ─────────────────────────────
+    // プレイヤーが離れたら子オブジェクトを解除
+    // ─────────────────────────────
+    void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            collision.transform.SetParent(null);
+        }
     }
 }
