@@ -18,9 +18,8 @@ public static class GameStageData
         }
     }
 
-    // 将来12シーン用意する場合はここでシーン名を返す
     public static string GetGameSceneName()
     {
-        return "main";
+        return $"Stage{SelectedWorld}-{SelectedStage}";
     }
 }

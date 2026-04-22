@@ -99,8 +99,10 @@ public class TimeManager : MonoBehaviour
             {
                 downKeyTimer += Time.deltaTime;
                 if (downKeyTimer >= LongPressTime)
+                {
                     targetAngle = 180f;
                     HourglassAngle = 180f;
+                }
             }
             else
             {
