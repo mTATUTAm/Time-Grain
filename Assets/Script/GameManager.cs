@@ -1,3 +1,8 @@
+// =====================================================
+// GameManager.cs - ゲーム状態（Playing / Paused / Dead / Cleared）を管理するシングルトン
+// 使い方: プレイヤー入力前に GameManager.Instance.IsPlaying で状態を確認する。
+//         ゴール到達時は OnClear()、死亡判定は Update 内で自動実行される。
+// =====================================================
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -42,6 +47,7 @@ public class GameManager : MonoBehaviour
                 Resume();
         }
 
+        // 画面外に落下したら死亡判定
         if (State == GameState.Playing && player != null && player.position.y < deathY)
             OnDeath();
     }
@@ -53,7 +59,7 @@ public class GameManager : MonoBehaviour
     {
         if (State != GameState.Playing) return;
         State = GameState.Cleared;
-        Time.timeScale = 0f;
+        Time.timeScale = 0f; // UIアニメーションには Animator の Update Mode を Unscaled Time にすること
         clearPanel.SetActive(true);
     }
 
@@ -87,20 +93,17 @@ public class GameManager : MonoBehaviour
     // ─────────────────────────────
     public void Retry()
     {
-        Time.timeScale = 1f;
         SceneTransitionManager.Instance.FadeToScene(SceneManager.GetActiveScene().name);
     }
 
     public void GoToStageSelect()
     {
-        Time.timeScale = 1f;
         SceneTransitionManager.Instance.FadeToScene("StageSelect");
     }
 
     public void GoToNextStage()
     {
         if (!GameStageData.HasNextStage()) return;
-        Time.timeScale = 1f;
         GameStageData.AdvanceToNextStage();
         SceneTransitionManager.Instance.FadeToScene(GameStageData.GetGameSceneName());
     }

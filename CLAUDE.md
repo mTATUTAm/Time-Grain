@@ -24,7 +24,7 @@ All game scripts live in `Assets/Script/`. The project uses a **Manager singleto
 
 **`GameManager`** — Game state machine (`Playing`, `Paused`, `Dead`, `Cleared`). Detects player death (Y < −10), handles pause/resume via ESC, controls `Time.timeScale` for pause, and activates/deactivates UI panels. Check `GameManager.IsPlaying` before accepting player input.
 
-**`SceneTransitionManager`** — Persistent singleton (`DontDestroyOnLoad`) that auto-generates itself. Handles fade transitions between scenes. Call it from any scene; it creates its own canvas at runtime.
+**`SceneTransitionManager`** — Persistent singleton (`DontDestroyOnLoad`) that auto-generates itself. Handles fade transitions between scenes. Call it from any scene; it creates its own canvas at runtime. `Time.timeScale` はフェードアウト中は 0 のまま保持され、シーン読み込み完了後にリセットされる（暗転中にゲームが動かないようにするため）。
 
 **`PlayerController`** — Physics-based 2D platformer movement using `Rigidbody2D.AddForce`. A/D for movement, Space for jump. Ground detection uses `OverlapCircle`. Respects `GameManager.IsPlaying`.
 
@@ -78,6 +78,38 @@ Stage{W}-{S}.unity
 - `SceneTransitionManager` and `GameManager` are persistent singletons — do not add multiple instances.
 - Stage progress is stored in the static `GameStageData`; it is not persisted across sessions.
 - 全12ステージシーンを Build Settings に登録すること。
+- `FadeToScene()` を呼ぶ前に `Time.timeScale = 1f` しないこと。暗転中にゲームが動いてしまう。timeScale のリセットは `SceneTransitionManager` がシーン読み込み完了後に内部で行う。
+
+## Planned Features
+
+以下は今後実装予定の機能（未着手）：
+
+- **フェード演出の改善** — 現在は単純な黒フェードのみ。方向ワイプ・円形アイリス・ノイズディゾルブなどへの拡張を検討中。`SceneTransitionManager` に複数のエフェクト種別を持たせる形で実装する予定。
+- **レベルデザイン** — 全12ステージのシーンファイルは存在するが、中身はまだ未実装。
+- **サウンド** — BGM・SE の仕組みがまだない。`AudioManager` の追加が必要。
+
+## Coding Conventions
+
+### Comment Style
+
+全スクリプトに以下の形式のファイルヘッダーを付ける：
+
+```
+// =====================================================
+// FileName.cs - 一行の要約
+// 使い方: アタッチ先や呼び出し方を簡潔に
+// =====================================================
+```
+
+インラインコメントは **WHY が非自明な箇所のみ** 記述する。コードを読めばわかる WHAT は書かない。
+
+### File Encoding
+
+`Assets/Script/` 以下の `.cs` ファイルはすべて **UTF-8** で保存すること。Shift-JIS など他のエンコーディングで保存すると日本語コメントが文字化けする。
+
+### `BoardDeltaTime` の扱い
+
+`TimeManager.BoardDeltaTime` は逆行中に**負の値**を返す。これを使うオブジェクトは逆方向への動作を前提として設計すること。`Time.deltaTime`（常に正）と混在させないよう注意。
 
 ## Dependencies
 

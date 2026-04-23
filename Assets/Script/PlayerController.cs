@@ -1,19 +1,25 @@
+// =====================================================
+// PlayerController.cs - プレイヤーの移動・ジャンプ制御
+// 使い方: Player オブジェクトにアタッチする。
+//         Rigidbody2D と、着地判定用の groundCheck 子オブジェクトが必要。
+//         GameManager.IsPlaying が false の間はジャンプ入力を受け付けない。
+// =====================================================
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [Header("�ړ��ݒ�")]
-    public float moveSpeed = 6f;        // �ō����x
-    public float acceleration = 40f;    // ������
-    public float deceleration = 40f;    // ������
+    [Header("移動設定")]
+    public float moveSpeed = 6f;
+    public float acceleration = 40f;
+    public float deceleration = 40f;
 
-    [Header("�W�����v�ݒ�")]
-    public float jumpForce = 12f;       // �W�����v��
+    [Header("ジャンプ設定")]
+    public float jumpForce = 12f;
 
-    [Header("�ڒn����")]
-    public Transform groundCheck;       // �����̋�I�u�W�F�N�g
+    [Header("着地判定")]
+    public Transform groundCheck;
     public float groundCheckRadius = 0.1f;
-    public LayerMask groundLayer;       // �n�ʂ̃��C���[
+    public LayerMask groundLayer;
 
     private Rigidbody2D rb;
     private bool isGrounded;
@@ -25,24 +31,16 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        // �ڒn����
-        isGrounded = Physics2D.OverlapCircle(
-            groundCheck.position,
-            groundCheckRadius,
-            groundLayer
-        );
-
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
         HandleJump();
     }
 
+    // 物理演算と同じ更新タイミングにするため FixedUpdate で移動処理する
     void FixedUpdate()
     {
         HandleMove();
     }
 
-    // ����������������������������������������������������������
-    // ���E�ړ��i�����E��������j
-    // ����������������������������������������������������������
     void HandleMove()
     {
         float input = 0f;
@@ -50,23 +48,19 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKey(KeyCode.D)) input = 1f;
 
         float targetSpeed = input * moveSpeed;
-        float speedDiff = targetSpeed - rb.linearVelocity.x;
+        float speedDiff = targetSpeed - rb.linearVelocity.x; // 目標速度との差分をもとに力を算出
 
-        // ���͂�����Ή����A�Ȃ���Ό���
+        // 入力があれば加速、なければ減速
         float force = (Mathf.Abs(input) > 0.01f) ? acceleration : deceleration;
-
-        // velocity�ɒ��ډ��Z���Ċ��炩�ɕω�������
         rb.AddForce(Vector2.right * speedDiff * force, ForceMode2D.Force);
     }
 
-    // ����������������������������������������������������������
-    // �W�����v
-    // ����������������������������������������������������������
     void HandleJump()
     {
         if (GameManager.Instance != null && !GameManager.Instance.IsPlaying) return;
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
+            // AddForce ではなく直接代入して毎回一定の跳躍力を保証する
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         }
     }

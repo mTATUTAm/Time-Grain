@@ -1,3 +1,8 @@
+// =====================================================
+// SceneTransitionManager.cs - フェードイン/アウト付きシーン遷移のシングルトン
+// 使い方: SceneTransitionManager.Instance.FadeToScene("シーン名") を呼ぶだけ。
+//         どのシーンにも配置不要。初回アクセス時に自動生成され DontDestroyOnLoad される。
+// =====================================================
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -44,7 +49,7 @@ public class SceneTransitionManager : MonoBehaviour
 
         Canvas canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 9999;
+        canvas.sortingOrder = 9999; // 全UIより前面にしてフェード画像を常に最前面に描画する
 
         canvasObj.AddComponent<CanvasScaler>();
         canvasObj.AddComponent<GraphicRaycaster>();
@@ -72,12 +77,13 @@ public class SceneTransitionManager : MonoBehaviour
     private IEnumerator FadeTransition(string sceneName)
     {
         isTransitioning = true;
-        Time.timeScale = 1f;
 
-        yield return StartCoroutine(Fade(0f, 1f));
+        yield return StartCoroutine(Fade(0f, 1f)); // Fade は unscaledDeltaTime なので timeScale=0 でも動く
 
         AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
         yield return op;
+
+        Time.timeScale = 1f; // シーン読み込み完了後に戻す（StageSelect など GameManager のないシーン向け）
 
         yield return StartCoroutine(Fade(1f, 0f));
 
@@ -91,7 +97,7 @@ public class SceneTransitionManager : MonoBehaviour
 
         while (elapsed < fadeDuration)
         {
-            elapsed += Time.unscaledDeltaTime;
+            elapsed += Time.unscaledDeltaTime; // timeScale=0 のポーズ中もフェードできるよう Unscaled を使う
             c.a = Mathf.Lerp(from, to, elapsed / fadeDuration);
             fadeImage.color = c;
             yield return null;

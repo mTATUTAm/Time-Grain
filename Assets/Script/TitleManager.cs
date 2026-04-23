@@ -1,3 +1,7 @@
+// =====================================================
+// TitleManager.cs - タイトル画面のボタン処理
+// 使い方: Title.unity の GameObject にアタッチし、ボタンの OnClick に各メソッドを登録する。
+// =====================================================
 using UnityEngine;
 
 public class TitleManager : MonoBehaviour

@@ -1,3 +1,9 @@
+// =====================================================
+// MovingPlatform.cs - 時間操作に連動して動く足場
+// 使い方: 動かしたい足場オブジェクトにアタッチし、speed と moveDirection を設定する。
+//         BoardDeltaTime を使うため、時間逆行中は逆方向に動く。
+//         プレイヤーが乗ると自動でペアレントされ、足場と一緒に動く。
+// =====================================================
 using UnityEngine;
 
 public class MovingPlatform : MonoBehaviour
@@ -20,6 +26,7 @@ public class MovingPlatform : MonoBehaviour
         {
             foreach (ContactPoint2D contact in collision.contacts)
             {
+                // 法線が下向き = プレイヤーが上から乗った場合のみペアレントする
                 if (contact.normal.y < -0.5f)
                 {
                     _ridingPlayer = collision.transform;
@@ -38,6 +45,7 @@ public class MovingPlatform : MonoBehaviour
         }
     }
 
+    // LateUpdate でペアレント操作することで物理演算との競合を避ける
     void LateUpdate()
     {
         if (_shouldDetach && _ridingPlayer != null)

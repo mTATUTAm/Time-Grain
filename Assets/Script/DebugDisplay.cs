@@ -1,4 +1,9 @@
-﻿using UnityEngine;
+﻿// =====================================================
+// DebugDisplay.cs - 開発用の時間・砂情報のオーバーレイ表示
+// 使い方: ステージシーンの任意の GameObject にアタッチするだけ。
+//         リリース前に削除またはオブジェクトを無効化すること。
+// =====================================================
+using UnityEngine;
 
 public class DebugDisplay : MonoBehaviour
 {

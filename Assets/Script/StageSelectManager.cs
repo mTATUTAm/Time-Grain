@@ -1,10 +1,13 @@
+// =====================================================
+// StageSelectManager.cs - ステージ選択画面の制御
+// 使い方: StageSelect.unity の GameObject にアタッチし、各ボタンの OnClick に対応メソッドを登録する。
+//         Phase1（ワールド選択）→ Phase2（ステージ選択）の2段階UI。
+//         選択結果は GameStageData に書き込まれ、シーン遷移後も参照される。
+// =====================================================
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-// ステージ選択画面
-// Phase1: ワールド1〜4を表示
-// Phase2: 選んだワールドのステージ1〜3を表示
 public class StageSelectManager : MonoBehaviour
 {
     [Header("パネル")]

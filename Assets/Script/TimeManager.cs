@@ -1,4 +1,9 @@
-﻿using UnityEngine;
+﻿// =====================================================
+// TimeManager.cs - 砂時計の傾きで盤面の時間スケールを制御するシングルトン
+// 使い方: Time.deltaTime の代わりに BoardDeltaTime を使うこと。
+//         逆行中かどうかは IsReversing、砂残量は CurrentSand で参照する。
+// =====================================================
+using UnityEngine;
 
 public class TimeManager : MonoBehaviour
 {
@@ -25,14 +30,14 @@ public class TimeManager : MonoBehaviour
 
     // 砂切れかどうか（外部から参照）
     public bool IsSandEmpty { get; private set; } = false;
-    // 砂が満タンかどうか（外部から参照）
+    // 砂が満タンかどうか。逆行中は砂が回収されるため、逆行中は満タン判定から除外する
     public bool IsSandFull => CurrentSand >= MaxSand && !IsReversing;
 
 
     // 盤面の時間スケール（外部から参照）
     public float BoardTimeScale { get; private set; } = 1f;
 
-    // 盤面用deltaTime（足場などがこれを使う）
+    // 盤面用deltaTime。逆行中は負の値になる。Time.deltaTime の代わりに必ずこちらを使う
     public float BoardDeltaTime => Time.deltaTime * BoardTimeScale;
 
     // 逆行中かどうか（外部から参照）
@@ -211,17 +216,19 @@ public class TimeManager : MonoBehaviour
 
         if (IsReversing)
         {
+            // 逆行中：砂が逆流して上に戻る（残量が増える）
             IsSandEmpty = false;
             CurrentSand += sandDelta;
             CurrentSand = Mathf.Min(CurrentSand, MaxSand);
 
             if (CurrentSand >= MaxSand)
             {
-                ForceMovToForward(); // IsSandFullの記述を削除
+                ForceMovToForward();
             }
         }
         else
         {
+            // 順行・停止中：砂が落ちる（残量が減る）
             CurrentSand -= sandDelta;
             CurrentSand = Mathf.Max(CurrentSand, 0f);
 
@@ -233,14 +240,14 @@ public class TimeManager : MonoBehaviour
         }
     }
 
-    // 砂切れ時：90度（停止）へ即座に
+    // 砂切れ時：これ以上順行できないため即座に停止（90度）へ戻す
     void ForceMoveToReverse()
     {
         targetAngle = 90f;
         HourglassAngle = 90f;
     }
 
-    // 満タン時：90度（停止）へ即座に
+    // 満タン時：これ以上逆行できないため即座に停止（90度）へ戻す
     void ForceMovToForward()
     {
         targetAngle = 90f;
