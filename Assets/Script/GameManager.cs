@@ -5,6 +5,7 @@
 // =====================================================
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -20,8 +21,17 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject clearPanel;
     [SerializeField] private GameObject retryPanel;
 
+    [Header("ポーズパネルボタン (Resume, Retry, StageSelect の順)")]
+    [SerializeField] private Button[] pauseButtons;
+
+    [Header("クリアパネルボタン (Next, Select の順)")]
+    [SerializeField] private Button[] clearButtons;
+
     [Header("設定")]
     [SerializeField] private float deathY = -10f;
+
+    private int _pauseCursor = 0;
+    private int _clearCursor = 0;
 
     private void Awake()
     {
@@ -41,15 +51,76 @@ public class GameManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if (State == GameState.Playing)
-                Pause();
-            else if (State == GameState.Paused)
-                Resume();
+            if (State == GameState.Playing) Pause();
+            else if (State == GameState.Paused) Resume();
         }
 
-        // 画面外に落下したら死亡判定
         if (State == GameState.Playing && player != null && player.position.y < deathY)
             OnDeath();
+
+        if (State == GameState.Paused)
+            HandlePauseInput();
+        else if (State == GameState.Cleared)
+            HandleClearInput();
+    }
+
+    // ─────────────────────────────
+    // キーボードナビゲーション
+    // ─────────────────────────────
+    private void HandlePauseInput()
+    {
+        if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A))
+        {
+            _pauseCursor = Mathf.Max(0, _pauseCursor - 1);
+            UpdatePauseHighlight();
+        }
+        else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D))
+        {
+            _pauseCursor = Mathf.Min(pauseButtons.Length - 1, _pauseCursor + 1);
+            UpdatePauseHighlight();
+        }
+        else if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
+        {
+            pauseButtons[_pauseCursor].onClick.Invoke();
+        }
+    }
+
+    private void HandleClearInput()
+    {
+        if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A))
+        {
+            _clearCursor = Mathf.Max(0, _clearCursor - 1);
+            UpdateClearHighlight();
+        }
+        else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D))
+        {
+            _clearCursor = Mathf.Min(clearButtons.Length - 1, _clearCursor + 1);
+            UpdateClearHighlight();
+        }
+        else if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
+        {
+            clearButtons[_clearCursor].onClick.Invoke();
+        }
+    }
+
+    // Button.Select() は EventSystem 経由で Enter 長押し中に onClick を繰り返すため、
+    // image.color を直接操作してハイライトを管理する
+    private void UpdatePauseHighlight()
+    {
+        for (int i = 0; i < pauseButtons.Length; i++)
+        {
+            var cb = pauseButtons[i].colors;
+            pauseButtons[i].image.color = (i == _pauseCursor) ? cb.highlightedColor : cb.normalColor;
+        }
+    }
+
+    private void UpdateClearHighlight()
+    {
+        for (int i = 0; i < clearButtons.Length; i++)
+        {
+            var cb = clearButtons[i].colors;
+            clearButtons[i].image.color = (i == _clearCursor) ? cb.highlightedColor : cb.normalColor;
+        }
     }
 
     // ─────────────────────────────
@@ -60,7 +131,9 @@ public class GameManager : MonoBehaviour
         if (State != GameState.Playing) return;
         State = GameState.Cleared;
         Time.timeScale = 0f; // UIアニメーションには Animator の Update Mode を Unscaled Time にすること
+        _clearCursor = 0;
         clearPanel.SetActive(true);
+        UpdateClearHighlight();
     }
 
     public void OnDeath()
@@ -78,7 +151,9 @@ public class GameManager : MonoBehaviour
     {
         State = GameState.Paused;
         Time.timeScale = 0f;
+        _pauseCursor = 0;
         pausePanel.SetActive(true);
+        UpdatePauseHighlight();
     }
 
     public void Resume()
