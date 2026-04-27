@@ -41,6 +41,8 @@ public class MovingPlatform : MonoBehaviour
 
     void Update()
     {
+        if (TimeManager.Instance.IsStartupLocked) return;
+
         float dt = TimeManager.Instance.BoardDeltaTime;
 
         if (moveOffset != Vector2.zero)
@@ -62,6 +64,8 @@ public class MovingPlatform : MonoBehaviour
         float n = ((t % 2f) + 2f) % 2f;
         return n <= 1f ? n : 2f - n;
     }
+
+ 
 
     void OnCollisionEnter2D(Collision2D collision)
     {

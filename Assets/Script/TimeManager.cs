@@ -21,6 +21,10 @@ public class TimeManager : MonoBehaviour
     // 上下キーの長押し判定時間（秒）
     public float LongPressTime = 0.5f;
 
+    [Header("スナップ後クールダウン")]
+    // スナップ直後に入力を無効化する時間（秒）
+    public float InputCooldownTime = 0.1f;
+
     [Header("砂の設定")]
     // 砂の最大量
     public float MaxSand = 10f;
@@ -32,7 +36,6 @@ public class TimeManager : MonoBehaviour
     public bool IsSandEmpty { get; private set; } = false;
     // 砂が満タンかどうか。逆行中は砂が回収されるため、逆行中は満タン判定から除外する
     public bool IsSandFull => CurrentSand >= MaxSand && !IsReversing;
-
 
     // 盤面の時間スケール（外部から参照）
     public float BoardTimeScale { get; private set; } = 1f;
@@ -48,17 +51,42 @@ public class TimeManager : MonoBehaviour
     private float downKeyTimer = 0f;
     private float bothKeyTimer = 0f;
 
+    // スナップ後クールダウンタイマー
+    private float inputCooldownTimer = 0f;
+
+    // スナップ後、全キーが離れるまで角度をピン止めするフラグ
+    private bool _snapLocked = false;
+    private float _snapLockedAngle;
+
     // 目標角度（アナログ変化の目的地）
     private float targetAngle = 0f;
 
+    // シーン開始後の無効化タイマー
+    private float _startupLockTimer = 2f;
+
+    // 起動ロック中かどうか（他のシステムが参照する）
+    public bool IsStartupLocked => _startupLockTimer > 0f;
+
     void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
         CurrentSand = MaxSand; // 砂を満タンにする
     }
 
     void Update()
     {
+        if (_startupLockTimer > 0f)
+        {
+            // timeScale=0（フェード中）でも確実にカウントするため unscaledDeltaTime を使う
+            _startupLockTimer -= Time.unscaledDeltaTime;
+            return;
+        }
+
         HandleInput();
         UpdateAngle();
         UpdateBoardTimeScale();
@@ -70,6 +98,23 @@ public class TimeManager : MonoBehaviour
     // ─────────────────────────────
     void HandleInput()
     {
+        // スナップ直後のクールダウン中は入力を無視
+        if (inputCooldownTimer > 0f)
+        {
+            inputCooldownTimer -= Time.deltaTime;
+            return;
+        }
+
+        // スナップ後: 全キーが離れるまで角度をピン止め（クールダウン後も片方のキーが残っていると傾くのを防ぐ）
+        if (_snapLocked)
+        {
+            targetAngle = _snapLockedAngle;
+            bool anyKey = Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.RightArrow)
+                       || Input.GetKey(KeyCode.UpArrow)   || Input.GetKey(KeyCode.DownArrow);
+            if (!anyKey) _snapLocked = false;
+            return;
+        }
+
         // 満タン中は逆行方向への入力を無効化
         if (IsSandFull)
         {
@@ -83,6 +128,9 @@ public class TimeManager : MonoBehaviour
                 {
                     targetAngle = 0f;
                     HourglassAngle = 0f;
+                    inputCooldownTimer = InputCooldownTime;
+                    _snapLockedAngle = 0f; _snapLocked = true;
+                    upKeyTimer = 0f;
                 }
             }
             else
@@ -107,6 +155,9 @@ public class TimeManager : MonoBehaviour
                 {
                     targetAngle = 180f;
                     HourglassAngle = 180f;
+                    inputCooldownTimer = InputCooldownTime;
+                    _snapLockedAngle = 180f; _snapLocked = true;
+                    downKeyTimer = 0f;
                 }
             }
             else
@@ -138,6 +189,9 @@ public class TimeManager : MonoBehaviour
             {
                 targetAngle = 90f;
                 HourglassAngle = 90f;
+                inputCooldownTimer = InputCooldownTime;
+                _snapLockedAngle = 90f; _snapLocked = true;
+                bothKeyTimer = 0f;
             }
         }
         else
@@ -153,6 +207,9 @@ public class TimeManager : MonoBehaviour
             {
                 targetAngle = 0f;
                 HourglassAngle = 0f;
+                inputCooldownTimer = InputCooldownTime;
+                _snapLockedAngle = 0f; _snapLocked = true;
+                upKeyTimer = 0f;
             }
         }
         else
@@ -168,6 +225,9 @@ public class TimeManager : MonoBehaviour
             {
                 targetAngle = 180f;
                 HourglassAngle = 180f;
+                inputCooldownTimer = InputCooldownTime;
+                _snapLockedAngle = 180f; _snapLocked = true;
+                downKeyTimer = 0f;
             }
         }
         else

@@ -39,6 +39,7 @@ public class MovingPlatformTrajectory : MonoBehaviour
     private void Update()
     {
         if (_dotRenderers == null || _half <= 0f) return;
+        if (TimeManager.Instance.IsStartupLocked) return;
         _timeAccum += TimeManager.Instance.BoardDeltaTime;
         UpdateDotColors();
     }

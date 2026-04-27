@@ -1090,7 +1090,7 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 5795505798440051417, guid: d149f4726b353074b809cd6351073300, type: 3}
   m_PrefabInstance: {fileID: 1175675604320792366}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1772993811
+--- !u!114 &1772993808
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1470,11 +1470,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4550373669988936652, guid: d149f4726b353074b809cd6351073300, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.03
+      value: -0.52
       objectReference: {fileID: 0}
     - target: {fileID: 4550373669988936652, guid: d149f4726b353074b809cd6351073300, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2
+      value: 1.78
       objectReference: {fileID: 0}
     - target: {fileID: 5514142141323289324, guid: d149f4726b353074b809cd6351073300, type: 3}
       propertyPath: m_Color.b
@@ -1513,12 +1513,16 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 8672705126509920976, guid: d149f4726b353074b809cd6351073300, type: 3}
+      propertyPath: moveOffset.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8672705126509920976, guid: d149f4726b353074b809cd6351073300, type: 3}
       propertyPath: moveOffset.y
-      value: -5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8672705126509920976, guid: d149f4726b353074b809cd6351073300, type: 3}
       propertyPath: rotationAngle
-      value: 90
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8672705126509920976, guid: d149f4726b353074b809cd6351073300, type: 3}
       propertyPath: moveDirection.x
@@ -1594,7 +1598,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 5795505798440051417, guid: d149f4726b353074b809cd6351073300, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1772993811}
+      addedObject: {fileID: 1772993808}
   m_SourcePrefab: {fileID: 100100000, guid: d149f4726b353074b809cd6351073300, type: 3}
 --- !u!1001 &2593522868936969113
 PrefabInstance:
@@ -1725,5 +1729,5 @@ SceneRoots:
   - {fileID: 1035422974}
   - {fileID: 3425328449862737754}
   - {fileID: 1175675604320792366}
-  - {fileID: 2593522868936969113}
   - {fileID: 1836379245}
+  - {fileID: 2593522868936969113}

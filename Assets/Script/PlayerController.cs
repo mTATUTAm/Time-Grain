@@ -43,6 +43,8 @@ public class PlayerController : MonoBehaviour
 
     void HandleMove()
     {
+        if (SceneTransitionManager.IsTransitioning) return;
+
         float input = 0f;
         if (Input.GetKey(KeyCode.A)) input = -1f;
         if (Input.GetKey(KeyCode.D)) input = 1f;
@@ -57,6 +59,7 @@ public class PlayerController : MonoBehaviour
 
     void HandleJump()
     {
+        if (SceneTransitionManager.IsTransitioning) return;
         if (GameManager.Instance != null && !GameManager.Instance.IsPlaying) return;
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {

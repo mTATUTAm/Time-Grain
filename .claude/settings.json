@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(Assets/Script/**)",
+      "Read(Assets/Resources/**)",
+      "Edit(Assets/Script/**)",
+      "Edit(Assets/Resources/**)",
+      "Write(Assets/Script/**)",
+      "Write(Assets/Resources/**)",
+      "Bash(git diff*)",
+      "Bash(git status*)",
+      "Bash(git log*)"
+    ]
+  }
+}
