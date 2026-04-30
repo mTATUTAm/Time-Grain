@@ -13,8 +13,9 @@ public class PlayerController : MonoBehaviour
     public float acceleration = 40f;
     public float deceleration = 40f;
 
-    [Header("ジャンプ設定")]
-    public float jumpForce = 12f;
+    [Header("ジャンプ設定（ジャンプキング方式）")]
+    public float jumpVelocityX = 5f;
+    public float jumpVelocityY = 12f;
 
     [Header("着地判定")]
     public Transform groundCheck;
@@ -23,6 +24,9 @@ public class PlayerController : MonoBehaviour
 
     private Rigidbody2D rb;
     private bool isGrounded;
+    private bool isJumping;   // ジャンプ開始〜着地まで true。Update と FixedUpdate のタイミング差で
+                              // 生じる「isGrounded が遅れて false になる」問題を回避するために使う
+    private int facingDirection = 1; // +1: 右, -1: 左
 
     void Awake()
     {
@@ -32,6 +36,11 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+
+        // 下降中に着地したらジャンプ終了とみなす
+        if (isJumping && isGrounded && rb.linearVelocity.y <= 0f)
+            isJumping = false;
+
         HandleJump();
     }
 
@@ -44,10 +53,15 @@ public class PlayerController : MonoBehaviour
     void HandleMove()
     {
         if (SceneTransitionManager.IsTransitioning) return;
+        // isJumping は HandleJump と同フレームで立つため、FixedUpdate の AddForce を確実にブロックできる
+        if (!isGrounded || isJumping) return;
 
         float input = 0f;
         if (Input.GetKey(KeyCode.A)) input = -1f;
         if (Input.GetKey(KeyCode.D)) input = 1f;
+
+        if (Mathf.Abs(input) > 0.01f)
+            facingDirection = (int)Mathf.Sign(input);
 
         float targetSpeed = input * moveSpeed;
         float speedDiff = targetSpeed - rb.linearVelocity.x; // 目標速度との差分をもとに力を算出
@@ -61,10 +75,11 @@ public class PlayerController : MonoBehaviour
     {
         if (SceneTransitionManager.IsTransitioning) return;
         if (GameManager.Instance != null && !GameManager.Instance.IsPlaying) return;
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
-        {
-            // AddForce ではなく直接代入して毎回一定の跳躍力を保証する
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-        }
+        if (!isGrounded || isJumping) return;
+        if (!Input.GetKeyDown(KeyCode.Space)) return;
+
+        isJumping = true;
+        // 向いている方向に固定 velocity をセット（ジャンプキング方式）
+        rb.linearVelocity = new Vector2(facingDirection * jumpVelocityX, jumpVelocityY);
     }
 }

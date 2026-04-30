@@ -1709,6 +1709,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 8584685015310042212, guid: 4bd9c0ccead33594bab2a2d3c4b9befc, type: 3}
+      propertyPath: jumpVelocityX
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8584685015310042212, guid: 4bd9c0ccead33594bab2a2d3c4b9befc, type: 3}
+      propertyPath: jumpVelocityY
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
