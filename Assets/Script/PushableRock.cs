@@ -29,6 +29,8 @@ public class PushableRock : MonoBehaviour, IBoardSaveable
     private bool                     _isFalling;
     private float                    _lockedX;
     private bool                     _wasSandFull;
+    private bool                     _loadedThisFrame;
+    private bool                     _suppressSandFullReset;
     private Dictionary<int, Vector2> _timeline  = new Dictionary<int, Vector2>();
     private int                      _pushDir   = 0;
     private bool                     _isPushing = false;
@@ -104,23 +106,36 @@ public class PushableRock : MonoBehaviour, IBoardSaveable
             _playerShouldDetach = false;
         }
 
+        if (_loadedThisFrame)
+        {
+            _loadedThisFrame = false;
+            return;
+        }
+
         if (GameManager.Instance == null || !GameManager.Instance.IsPlaying) return;
         if (TimeManager.Instance == null) return;
-        if (TimeManager.Instance.IsStartupLocked) return;
 
         var tm = TimeManager.Instance;
 
-        // 砂が満タンに戻った瞬間: タイムラインをクリアして初期位置に戻す
+        // IsStartupLocked より前で更新しないと、ロック中に満タン遷移を見落として
+        // ロック解除後に誤リセットが発生する
         bool isSandFull = tm.IsSandFull;
         if (isSandFull && !_wasSandFull)
         {
-            _timeline.Clear();
-            _rb.position  = _startPos;
-            _fallVelocity = 0f;
-            _isFalling    = false;
-            _wasGrounded  = true;
+            if (!_suppressSandFullReset)
+            {
+                _timeline.Clear();
+                _rb.position  = _startPos;
+                _fallVelocity = 0f;
+                _isFalling    = false;
+                _wasGrounded  = true;
+            }
+            // 満タン遷移を1回スキップしたら次回から通常動作に戻す
+            _suppressSandFullReset = false;
         }
         _wasSandFull = isSandFull;
+
+        if (tm.IsStartupLocked) return;
 
         _isGrounded = CheckGrounded();
 
@@ -226,42 +241,53 @@ public class PushableRock : MonoBehaviour, IBoardSaveable
 
     private struct RockSaveData
     {
-        public Dictionary<int, Vector2> timeline;
-        public Vector2 startPos;
-        public float   fallVelocity;
-        public bool    isFalling;
-        public float   lockedX;
-        public bool    wasGrounded;
+        public Vector2                  position;
+        public Dictionary<int, Vector2> relativeTimeline; // key = SandKey - saveKey
+        public float fallVelocity;
+        public bool  isFalling;
+        public float lockedX;
+        public bool  wasGrounded;
     }
 
     public object SaveState()
     {
+        int saveKey = TimeManager.Instance != null ? SandKey(TimeManager.Instance.CurrentSand) : 0;
+        var rel = new Dictionary<int, Vector2>();
+        foreach (var kvp in _timeline)
+            rel[kvp.Key - saveKey] = kvp.Value;
+
         return new RockSaveData
         {
-            timeline     = new Dictionary<int, Vector2>(_timeline),
-            startPos     = _startPos,
-            fallVelocity = _fallVelocity,
-            isFalling    = _isFalling,
-            lockedX      = _lockedX,
-            wasGrounded  = _wasGrounded,
+            position         = _rb.position,
+            relativeTimeline = rel,
+            fallVelocity     = _fallVelocity,
+            isFalling        = _isFalling,
+            lockedX          = _lockedX,
+            wasGrounded      = _wasGrounded,
         };
     }
 
     public void LoadState(object state)
     {
-        var data     = (RockSaveData)state;
-        _timeline    = new Dictionary<int, Vector2>(data.timeline);
-        _startPos    = data.startPos;
+        var data      = (RockSaveData)state;
         _fallVelocity = data.fallVelocity;
-        _isFalling   = data.isFalling;
-        _lockedX     = data.lockedX;
-        _wasGrounded = data.wasGrounded;
+        _isFalling    = data.isFalling;
+        _lockedX      = data.lockedX;
+        _wasGrounded  = data.wasGrounded;
+        _rb.position  = data.position;
 
+        // セーブ時の相対タイムラインをロード時の砂キーに再マッピングする。
+        // これにより「何秒かけてどう動いたか」の履歴がロード位置を基準に再生される。
+        _timeline.Clear();
         if (TimeManager.Instance != null)
         {
+            int loadKey = SandKey(TimeManager.Instance.CurrentSand);
+            foreach (var kvp in data.relativeTimeline)
+                _timeline[loadKey + kvp.Key] = kvp.Value;
             _wasSandFull = TimeManager.Instance.IsSandFull;
-            if (_timeline.TryGetValue(SandKey(TimeManager.Instance.CurrentSand), out Vector2 pos))
-                _rb.position = pos;
         }
+
+        _suppressSandFullReset = true;
+        _loadedThisFrame       = true;
     }
 }

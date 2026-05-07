@@ -831,8 +831,8 @@ GameObject:
   - component: {fileID: 246876212}
   - component: {fileID: 246876211}
   - component: {fileID: 246876210}
-  - component: {fileID: 246876209}
   - component: {fileID: 246876214}
+  - component: {fileID: 246876215}
   m_Layer: 6
   m_Name: r (13)
   m_TagString: Untagged
@@ -840,23 +840,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &246876209
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 246876208}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d15faed2f3490354bb3ce6b37acb25b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MovingPlatformTrajectory
-  dotCount: 40
-  dotRadius: 0.04
-  forwardColor: {r: 1, g: 0, b: 0, a: 1}
-  reverseColor: {r: 0.3, g: 0.6, b: 1, a: 1}
-  sortingOrder: -1
 --- !u!114 &246876210
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -869,9 +852,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 393c1257acc44ad468a6753558c07c08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MovingPlatform
-  moveDirection: {x: 0, y: 0}
-  moveSpeed: 0
+  waypoints:
+  - {x: 0, y: 0}
   rotationSpeed: 72
+  pivotOffset: {x: 0, y: 0}
 --- !u!61 &246876211
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1019,6 +1003,24 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 3
+--- !u!114 &246876215
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 246876208}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d15faed2f3490354bb3ce6b37acb25b8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MovingPlatformTrajectory
+  dotCount: 40
+  dotRadius: 0.04
+  forwardColor: {r: 1, g: 0, b: 0, a: 1}
+  reverseColor: {r: 0.3, g: 0.6, b: 1, a: 1}
+  pivotOffset: {x: 1, y: 0}
+  sortingOrder: -1
 --- !u!1 &276298731
 GameObject:
   m_ObjectHideFlags: 0
@@ -2968,9 +2970,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 393c1257acc44ad468a6753558c07c08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MovingPlatform
-  moveDirection: {x: -1, y: 0}
-  moveSpeed: 1
+  waypoints:
+  - {x: 0, y: 0}
+  - {x: 5, y: 0}
   rotationSpeed: 0
+  pivotOffset: {x: 0, y: 0}
 --- !u!61 &1500528746
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -3692,6 +3696,7 @@ MonoBehaviour:
   dotRadius: 0.04
   forwardColor: {r: 1, g: 0, b: 0, a: 1}
   reverseColor: {r: 0.3, g: 0.6, b: 1, a: 1}
+  pivotOffset: {x: 0, y: 0}
   sortingOrder: -1
 --- !u!114 &1805816049
 MonoBehaviour:
@@ -3705,9 +3710,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 393c1257acc44ad468a6753558c07c08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MovingPlatform
-  moveDirection: {x: 0, y: 1}
-  moveSpeed: 0.7
+  waypoints:
+  - {x: 0, y: 0}
+  - {x: 0, y: 4}
   rotationSpeed: 0
+  pivotOffset: {x: 0, y: 0}
 --- !u!61 &1805816050
 BoxCollider2D:
   m_ObjectHideFlags: 0

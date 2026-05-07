@@ -1,8 +1,7 @@
 // =====================================================
 // MovingPlatformTrajectory.cs - MovingPlatform の軌道をゲーム中にドット列で表示する
 // 使い方: MovingPlatform と同じ GameObject にアタッチするだけ。
-//         赤ドット = プラットフォームがこれから通る軌道。
-//         青ドット = すでに通過済みの軌道。
+//         赤ドット = これから通る軌道 / 青ドット = 通過済みの軌道。
 // =====================================================
 using UnityEngine;
 
@@ -10,12 +9,16 @@ using UnityEngine;
 public class MovingPlatformTrajectory : MonoBehaviour
 {
     [Header("ドット")]
-    [SerializeField, Min(4)]     private int   dotCount  = 40;
-    [SerializeField, Min(0.01f)] private float dotRadius = 0.04f;
+    [SerializeField, Min(2)]      private int   dotCount  = 40;
+    [SerializeField, Min(0.01f)]  private float dotRadius = 0.04f;
 
     [Header("色")]
     [SerializeField] private Color forwardColor = Color.red;
     [SerializeField] private Color reverseColor = new Color(0.3f, 0.6f, 1f);
+
+    [Header("追跡点")]
+    [Tooltip("軌道を表示するローカル座標オフセット。(0,0) = 中心、(1,0) = 中心から右に1unit")]
+    [SerializeField] private Vector2 pivotOffset = Vector2.zero;
 
     [Header("描画")]
     [Tooltip("SpriteRenderer の sortingOrder。プラットフォームより小さい値にすると後ろに描画される")]
@@ -23,26 +26,32 @@ public class MovingPlatformTrajectory : MonoBehaviour
 
     private MovingPlatform   _mp;
     private SpriteRenderer[] _dotRenderers;
-    private float[]          _dotTimes;
-    private float            _half;
-    private float            _timeAccum;
+    private float[]          _dotTs;
     private GameObject       _container;
+    private bool             _dotsBuilt;
 
-    private void Start()
+    void Start()
     {
         _mp = GetComponent<MovingPlatform>();
-        BuildDots();
     }
 
-    private void Update()
+    void Update()
     {
-        if (_dotRenderers == null || _half <= 0f) return;
-        if (TimeManager.Instance.IsStartupLocked) return;
-        _timeAccum += TimeManager.Instance.BoardDeltaTime;
-        UpdateDotColors();
+        if (TimeManager.Instance == null || TimeManager.Instance.IsStartupLocked) return;
+
+        // TimeManager が準備できた最初のフレームでドットを生成する
+        if (!_dotsBuilt)
+        {
+            BuildDots();
+            _dotsBuilt = true;
+            return;
+        }
+
+        if (_dotRenderers == null) return;
+        UpdateDotColors(_mp.GetT());
     }
 
-    private void OnDestroy()
+    void OnDestroy()
     {
         if (_container != null) Destroy(_container);
     }
@@ -51,41 +60,33 @@ public class MovingPlatformTrajectory : MonoBehaviour
 
     private void BuildDots()
     {
-        bool hasMove = _mp.moveDirection != Vector2.zero && _mp.moveSpeed > 0f;
-        bool hasRot  = _mp.rotationSpeed != 0f;
-        if (!hasMove && !hasRot)
+        if (_mp.waypoints == null || _mp.waypoints.Length == 0)
         {
-            Debug.LogWarning("[Trajectory] moveDirection/moveSpeed と rotationSpeed が両方ゼロなので軌道を生成しません。Inspector を確認してください。");
+            Debug.LogWarning("[Trajectory] waypoints が未設定なので軌道を生成しません。");
             return;
         }
 
-        _half = TimeManager.Instance != null ? TimeManager.Instance.MaxSand : 10f;
-        if (_half <= 0f) return;
-
-        Vector3 startPos = transform.position;
-        Sprite  dotSprite = CreateCircleSprite();
-
-        _container    = new GameObject($"[Trajectory] {gameObject.name}");
-        _dotRenderers = new SpriteRenderer[dotCount];
-        _dotTimes     = new float[dotCount];
+        Sprite dotSprite  = CreateCircleSprite();
+        _container        = new GameObject($"[Trajectory] {gameObject.name}");
+        _dotRenderers     = new SpriteRenderer[dotCount];
+        _dotTs            = new float[dotCount];
 
         for (int i = 0; i < dotCount; i++)
         {
-            float t = (float)i / dotCount * _half;
-            _dotTimes[i]     = t;
-            _dotRenderers[i] = SpawnDot(SamplePos(startPos, t), dotSprite);
+            float t      = (float)i / (dotCount - 1);
+            _dotTs[i]        = t;
+            _dotRenderers[i] = SpawnDot(GetDotWorldPos(t), dotSprite);
         }
 
-        UpdateDotColors();
+        UpdateDotColors(0f);
     }
 
-    private SpriteRenderer SpawnDot(Vector3 worldPos, Sprite dotSprite)
+    private SpriteRenderer SpawnDot(Vector2 worldPos, Sprite dotSprite)
     {
         var go = new GameObject();
         go.transform.SetParent(_container.transform, false);
         go.transform.position   = worldPos;
         go.transform.localScale = Vector3.one * (dotRadius * 2f);
-
         var sr = go.AddComponent<SpriteRenderer>();
         sr.sprite       = dotSprite;
         sr.sortingOrder = sortingOrder;
@@ -94,24 +95,29 @@ public class MovingPlatformTrajectory : MonoBehaviour
 
     // ── 毎フレームの色更新 ────────────────────────────────────────────────
 
-    private void UpdateDotColors()
+    private void UpdateDotColors(float currentT)
     {
-        // _half でループして通過済み（reverseColor）と前方（forwardColor）を切り替える
-        float cycleT = ((_timeAccum % _half) + _half) % _half;
-
         for (int i = 0; i < _dotRenderers.Length; i++)
-            _dotRenderers[i].color = _dotTimes[i] < cycleT ? reverseColor : forwardColor;
+            _dotRenderers[i].color = _dotTs[i] <= currentT ? reverseColor : forwardColor;
+    }
+
+    // ── ドット位置計算 ────────────────────────────────────────────────────
+
+    // 追跡点のワールド座標 = 実際の中心位置 + pivotOffset を回転角で回したもの
+    private Vector2 GetDotWorldPos(float t)
+    {
+        Vector2 center = _mp.EvaluateActualWorldPos(t);
+        if (pivotOffset == Vector2.zero) return center;
+
+        float maxSand = TimeManager.Instance != null ? TimeManager.Instance.MaxSand : 0f;
+        float rad     = _mp.rotationSpeed * maxSand * t * Mathf.Deg2Rad;
+        float cos = Mathf.Cos(rad), sin = Mathf.Sin(rad);
+        return center + new Vector2(
+            cos * pivotOffset.x - sin * pivotOffset.y,
+            sin * pivotOffset.x + cos * pivotOffset.y);
     }
 
     // ── ヘルパー ─────────────────────────────────────────────────────────
-
-    private Vector3 SamplePos(Vector3 startPos, float t)
-    {
-        Vector3 pos = startPos;
-        if (_mp.moveDirection != Vector2.zero)
-            pos += (Vector3)(_mp.moveDirection.normalized * _mp.moveSpeed * t);
-        return pos;
-    }
 
     private static Sprite CreateCircleSprite(int size = 32)
     {
