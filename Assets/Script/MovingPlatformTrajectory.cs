@@ -1,9 +1,8 @@
 // =====================================================
 // MovingPlatformTrajectory.cs - MovingPlatform の軌道をゲーム中にドット列で表示する
 // 使い方: MovingPlatform と同じ GameObject にアタッチするだけ。
-//         赤ドット = プラットフォームがこれから通る順行軌道。
-//         青ドット = すでに通過済み、または復路の軌道。
-//         時間逆行中は青になったドットが赤に戻る。
+//         赤ドット = プラットフォームがこれから通る軌道。
+//         青ドット = すでに通過済みの軌道。
 // =====================================================
 using UnityEngine;
 
@@ -26,7 +25,6 @@ public class MovingPlatformTrajectory : MonoBehaviour
     private SpriteRenderer[] _dotRenderers;
     private float[]          _dotTimes;
     private float            _half;
-    private float            _full;
     private float            _timeAccum;
     private GameObject       _container;
 
@@ -53,23 +51,18 @@ public class MovingPlatformTrajectory : MonoBehaviour
 
     private void BuildDots()
     {
-        bool hasMove = _mp.moveOffset    != Vector2.zero;
-        bool hasRot  = _mp.rotationAngle != 0f;
+        bool hasMove = _mp.moveDirection != Vector2.zero && _mp.moveSpeed > 0f;
+        bool hasRot  = _mp.rotationSpeed != 0f;
         if (!hasMove && !hasRot)
         {
-            Debug.LogWarning("[Trajectory] moveOffset と rotationAngle が両方ゼロなので軌道を生成しません。Inspector を確認してください。");
+            Debug.LogWarning("[Trajectory] moveDirection/moveSpeed と rotationSpeed が両方ゼロなので軌道を生成しません。Inspector を確認してください。");
             return;
         }
 
-        _half = Mathf.Max(
-            hasMove ? _mp.moveDuration    : 0f,
-            hasRot  ? _mp.rotationDuration : 0f
-        );
+        _half = TimeManager.Instance != null ? TimeManager.Instance.MaxSand : 10f;
         if (_half <= 0f) return;
-        _full = _half * 2f;
 
-        Vector3 startPos  = transform.position;
-        float   startRotZ = transform.eulerAngles.z;
+        Vector3 startPos = transform.position;
         Sprite  dotSprite = CreateCircleSprite();
 
         _container    = new GameObject($"[Trajectory] {gameObject.name}");
@@ -78,9 +71,9 @@ public class MovingPlatformTrajectory : MonoBehaviour
 
         for (int i = 0; i < dotCount; i++)
         {
-            float t = (float)i / dotCount * _half; // 往路のみ（0 → _half）
+            float t = (float)i / dotCount * _half;
             _dotTimes[i]     = t;
-            _dotRenderers[i] = SpawnDot(SamplePos(startPos, startRotZ, t), dotSprite);
+            _dotRenderers[i] = SpawnDot(SamplePos(startPos, t), dotSprite);
         }
 
         UpdateDotColors();
@@ -103,10 +96,8 @@ public class MovingPlatformTrajectory : MonoBehaviour
 
     private void UpdateDotColors()
     {
-        // PingPong01 で往路・復路を折り返した進捗を [0, _half] で表現
-        // 往路: 0→_half（増加）、復路: _half→0（減少）
-        // _timeAccum が負でも PingPong01 が正しく処理するため初期フレームの誤表示が出ない
-        float cycleT = PingPong01(_timeAccum / _half) * _half;
+        // _half でループして通過済み（reverseColor）と前方（forwardColor）を切り替える
+        float cycleT = ((_timeAccum % _half) + _half) % _half;
 
         for (int i = 0; i < _dotRenderers.Length; i++)
             _dotRenderers[i].color = _dotTimes[i] < cycleT ? reverseColor : forwardColor;
@@ -114,30 +105,12 @@ public class MovingPlatformTrajectory : MonoBehaviour
 
     // ── ヘルパー ─────────────────────────────────────────────────────────
 
-    private Vector3 SamplePos(Vector3 startPos, float startRotZ, float t)
+    private Vector3 SamplePos(Vector3 startPos, float t)
     {
         Vector3 pos = startPos;
-        if (_mp.moveOffset != Vector2.zero)
-            pos += (Vector3)(_mp.moveOffset * PingPong01(t / _mp.moveDuration));
-
-        float rotZ = startRotZ;
-        if (_mp.rotationAngle != 0f)
-            rotZ += _mp.rotationAngle * PingPong01(t / _mp.rotationDuration);
-
-        return pos + (Vector3)RotateVec(_mp.trajectoryPoint, rotZ);
-    }
-
-    private static float PingPong01(float t)
-    {
-        float n = ((t % 2f) + 2f) % 2f;
-        return n <= 1f ? n : 2f - n;
-    }
-
-    private static Vector2 RotateVec(Vector2 v, float deg)
-    {
-        float rad = deg * Mathf.Deg2Rad;
-        float c = Mathf.Cos(rad), s = Mathf.Sin(rad);
-        return new Vector2(v.x * c - v.y * s, v.x * s + v.y * c);
+        if (_mp.moveDirection != Vector2.zero)
+            pos += (Vector3)(_mp.moveDirection.normalized * _mp.moveSpeed * t);
+        return pos;
     }
 
     private static Sprite CreateCircleSprite(int size = 32)

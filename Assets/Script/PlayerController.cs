@@ -1,8 +1,8 @@
 // =====================================================
-// PlayerController.cs - プレイヤーの移動・ジャンプ制御
-// 使い方: Player オブジェクトにアタッチする。
-//         Rigidbody2D と、着地判定用の groundCheck 子オブジェクトが必要。
-//         GameManager.IsPlaying が false の間はジャンプ入力を受け付けない。
+// PlayerController.cs - プレイヤーの移動・ジャンプ制御（ジャンプキング方式）
+// 使い方: Player オブジェクトにアタッチする。Rigidbody2D が必要。
+//         地上のみ左右移動可。空中は移動・方向転換不可。
+//         ジャンプは向いている方向に初速を直接セットする。
 // =====================================================
 using UnityEngine;
 
@@ -13,20 +13,17 @@ public class PlayerController : MonoBehaviour
     public float acceleration = 40f;
     public float deceleration = 40f;
 
-    [Header("ジャンプ設定（ジャンプキング方式）")]
+    [Header("ジャンプ設定")]
     public float jumpVelocityX = 5f;
     public float jumpVelocityY = 12f;
 
-    [Header("着地判定")]
-    public Transform groundCheck;
-    public float groundCheckRadius = 0.1f;
-    public LayerMask groundLayer;
+    [Header("接触判定")]
+    [Tooltip("この値以上の法線Y成分を持つ面のみ着地判定とする（0.7≒45度）")]
+    public float minGroundNormalY = 0.7f;
 
     private Rigidbody2D rb;
-    private bool isGrounded;
-    private bool isJumping;   // ジャンプ開始〜着地まで true。Update と FixedUpdate のタイミング差で
-                              // 生じる「isGrounded が遅れて false になる」問題を回避するために使う
-    private int facingDirection = 1; // +1: 右, -1: 左
+    private bool  isGrounded;
+    private float _facingX = 1f;  // 向き: +1=右, -1=左
 
     void Awake()
     {
@@ -35,16 +32,9 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
-
-        // 下降中に着地したらジャンプ終了とみなす
-        if (isJumping && isGrounded && rb.linearVelocity.y <= 0f)
-            isJumping = false;
-
         HandleJump();
     }
 
-    // 物理演算と同じ更新タイミングにするため FixedUpdate で移動処理する
     void FixedUpdate()
     {
         HandleMove();
@@ -52,21 +42,15 @@ public class PlayerController : MonoBehaviour
 
     void HandleMove()
     {
+        if (!isGrounded) return;
         if (SceneTransitionManager.IsTransitioning) return;
-        // isJumping は HandleJump と同フレームで立つため、FixedUpdate の AddForce を確実にブロックできる
-        if (!isGrounded || isJumping) return;
 
         float input = 0f;
-        if (Input.GetKey(KeyCode.A)) input = -1f;
-        if (Input.GetKey(KeyCode.D)) input = 1f;
-
-        if (Mathf.Abs(input) > 0.01f)
-            facingDirection = (int)Mathf.Sign(input);
+        if (Input.GetKey(KeyCode.A)) { input = -1f; _facingX = -1f; }
+        if (Input.GetKey(KeyCode.D)) { input =  1f; _facingX =  1f; }
 
         float targetSpeed = input * moveSpeed;
-        float speedDiff = targetSpeed - rb.linearVelocity.x; // 目標速度との差分をもとに力を算出
-
-        // 入力があれば加速、なければ減速
+        float speedDiff = targetSpeed - rb.linearVelocity.x;
         float force = (Mathf.Abs(input) > 0.01f) ? acceleration : deceleration;
         rb.AddForce(Vector2.right * speedDiff * force, ForceMode2D.Force);
     }
@@ -75,11 +59,23 @@ public class PlayerController : MonoBehaviour
     {
         if (SceneTransitionManager.IsTransitioning) return;
         if (GameManager.Instance != null && !GameManager.Instance.IsPlaying) return;
-        if (!isGrounded || isJumping) return;
+        if (!isGrounded) return;
         if (!Input.GetKeyDown(KeyCode.Space)) return;
 
-        isJumping = true;
-        // 向いている方向に固定 velocity をセット（ジャンプキング方式）
-        rb.linearVelocity = new Vector2(facingDirection * jumpVelocityX, jumpVelocityY);
+        rb.linearVelocity = new Vector2(_facingX * jumpVelocityX, jumpVelocityY);
+    }
+
+    void OnCollisionStay2D(Collision2D collision)
+    {
+        foreach (ContactPoint2D contact in collision.contacts)
+        {
+            if (contact.normal.y >= minGroundNormalY)
+                isGrounded = true;
+        }
+    }
+
+    void OnCollisionExit2D(Collision2D collision)
+    {
+        isGrounded = false;
     }
 }
